@@ -50,7 +50,30 @@ export default function CalendarPage() {
     async function fetchEvents() {
       try {
         const data = await db.getEvents();
-        setEvents(data);
+        
+        // Find existing duplicate entries (same title, times, and course)
+        const seen = new Set<string>();
+        const toDeleteIds: string[] = [];
+        const uniqueList: CalendarEvent[] = [];
+
+        data.forEach(e => {
+          const key = `${e.title}_${new Date(e.start_time).getTime()}_${new Date(e.end_time).getTime()}_${e.course || ''}`;
+          if (seen.has(key)) {
+            toDeleteIds.push(e.id);
+          } else {
+            seen.add(key);
+            uniqueList.push(e);
+          }
+        });
+
+        if (toDeleteIds.length > 0) {
+          // Silent background deletion of duplicates
+          await Promise.all(toDeleteIds.map(id => db.deleteEvent(id)));
+          setEvents(uniqueList);
+          addNotification(`Cleaned up ${toDeleteIds.length} duplicate calendar entries!`, 'info');
+        } else {
+          setEvents(data);
+        }
       } catch (err) {
         addNotification('Could not load calendar events', 'error');
       }

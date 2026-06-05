@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { db, StudyPlan, CalendarEvent } from '@/lib/db';
 import { useApp } from '@/components/AppContext';
 import styles from '@/styles/components/PlannerPage.module.css';
+import ConflictModal from '@/components/ConflictModal';
+import { checkEventConflict } from '@/lib/conflict';
 import { 
   Sparkles, 
   Brain, 
@@ -27,6 +29,11 @@ export default function PlannerPage() {
   const [activePlan, setActivePlan] = useState<StudyPlan | null>(null);
   const [planEvents, setPlanEvents] = useState<Omit<CalendarEvent, 'id'>[]>([]);
   const [scheduleApplied, setScheduleApplied] = useState(false);
+
+  // Conflict Resolution State
+  const [conflictQueue, setConflictQueue] = useState<Array<{ newEvent: Omit<CalendarEvent, 'id'> | CalendarEvent; conflicting: CalendarEvent[] }>>([]);
+  const [safeEventsToImport, setSafeEventsToImport] = useState<Omit<CalendarEvent, 'id'>[]>([]);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -115,6 +122,28 @@ export default function PlannerPage() {
     if (planEvents.length === 0 || !activePlan) return;
 
     try {
+      const existingEvents = await db.getEvents();
+      const queue: Array<{ newEvent: Omit<CalendarEvent, 'id'>; conflicting: CalendarEvent[] }> = [];
+      const safeList: Omit<CalendarEvent, 'id'>[] = [];
+      let tempCurrentEvents = [...existingEvents];
+
+      for (const item of planEvents) {
+        const conflicting = checkEventConflict(item, tempCurrentEvents);
+        if (conflicting.length > 0) {
+          queue.push({ newEvent: item, conflicting });
+        } else {
+          safeList.push(item);
+          tempCurrentEvents.push({ ...item, id: 'temp' });
+        }
+      }
+
+      if (queue.length > 0) {
+        setConflictQueue(queue);
+        setSafeEventsToImport(safeList);
+        setIsConflictModalOpen(true);
+        return;
+      }
+
       const promises = planEvents.map(event => db.addEvent(event));
       await Promise.all(promises);
 
@@ -132,6 +161,52 @@ export default function PlannerPage() {
       addNotification(`Applied ${planEvents.length} study sessions to calendar!`, 'success');
     } catch (err) {
       addNotification('Could not schedule events', 'error');
+    }
+  };
+
+  // Resolve conflict decisions for planner
+  const handleResolveConflicts = async (resolutions: {
+    toAdd: Omit<CalendarEvent, 'id'>[];
+    toDelete: string[];
+  }) => {
+    setIsConflictModalOpen(false);
+    setConflictQueue([]);
+
+    if (!activePlan) return;
+
+    try {
+      // 1. Delete rejected existing events
+      if (resolutions.toDelete.length > 0) {
+        await Promise.all(resolutions.toDelete.map(id => db.deleteEvent(id)));
+      }
+
+      // 2. Add approved new events (including the conflict-free safe events)
+      const eventsToCreate = [...safeEventsToImport, ...resolutions.toAdd];
+      if (eventsToCreate.length > 0) {
+        await Promise.all(eventsToCreate.map(evt => db.addEvent(evt)));
+      }
+
+      // 3. Update plan status
+      await db.deleteStudyPlan(activePlan.id);
+      const updatedPlan = await db.addStudyPlan({
+        title: activePlan.title,
+        created_at: activePlan.created_at,
+        content: activePlan.content,
+        schedule_applied: true
+      });
+
+      setActivePlan(updatedPlan);
+      setScheduleApplied(true);
+
+      addNotification(
+        `Applied ${eventsToCreate.length} study sessions to calendar` + 
+        (resolutions.toDelete.length > 0 ? `, removed ${resolutions.toDelete.length} conflict(s).` : '.'),
+        'success'
+      );
+
+      setSafeEventsToImport([]);
+    } catch (err) {
+      addNotification('Failed to apply conflict resolutions', 'error');
     }
   };
 
@@ -409,6 +484,17 @@ export default function PlannerPage() {
           )}
         </div>
       </div>
+      
+      <ConflictModal
+        isOpen={isConflictModalOpen}
+        conflicts={conflictQueue}
+        onResolve={handleResolveConflicts}
+        onCancel={() => {
+          setIsConflictModalOpen(false);
+          setConflictQueue([]);
+          setSafeEventsToImport([]);
+        }}
+      />
     </div>
   );
 }

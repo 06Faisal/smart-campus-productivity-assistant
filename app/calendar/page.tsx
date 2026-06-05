@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { db, CalendarEvent } from '@/lib/db';
 import { useApp } from '@/components/AppContext';
 import styles from '@/styles/components/CalendarPage.module.css';
+import ConflictModal from '@/components/ConflictModal';
+import { checkEventConflict } from '@/lib/conflict';
 import { 
   Calendar as CalendarIcon, 
   ChevronLeft, 
@@ -26,6 +28,11 @@ export default function CalendarPage() {
   const [syllabusText, setSyllabusText] = useState('');
   const [parsing, setParsing] = useState(false);
   const [parsedPreview, setParsedPreview] = useState<CalendarEvent[]>([]);
+
+  // Conflict Resolution State
+  const [conflictQueue, setConflictQueue] = useState<Array<{ newEvent: Omit<CalendarEvent, 'id'> | CalendarEvent; conflicting: CalendarEvent[] }>>([]);
+  const [safeEventsToImport, setSafeEventsToImport] = useState<Omit<CalendarEvent, 'id'>[]>([]);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
   // Manual event form state
   const [newEvent, setNewEvent] = useState({
@@ -131,14 +138,25 @@ export default function CalendarPage() {
       const startIso = new Date(`${newEvent.date}T${newEvent.startTime}`).toISOString();
       const endIso = new Date(`${newEvent.date}T${newEvent.endTime}`).toISOString();
 
-      const created = await db.addEvent({
+      const eventProposal = {
         title: newEvent.title,
         type: newEvent.type,
         start_time: startIso,
         end_time: endIso,
         description: newEvent.description,
         course: newEvent.course
-      });
+      };
+
+      // Check conflict
+      const conflicting = checkEventConflict(eventProposal, events);
+      if (conflicting.length > 0) {
+        setConflictQueue([{ newEvent: eventProposal, conflicting }]);
+        setSafeEventsToImport([]);
+        setIsConflictModalOpen(true);
+        return;
+      }
+
+      const created = await db.addEvent(eventProposal);
 
       setEvents(prev => [...prev, created]);
       addNotification('Event added to calendar!', 'success');
@@ -200,6 +218,28 @@ export default function CalendarPage() {
   const handleImportAllEvents = async () => {
     if (parsedPreview.length === 0) return;
     
+    const queue: Array<{ newEvent: CalendarEvent; conflicting: CalendarEvent[] }> = [];
+    const safeList: CalendarEvent[] = [];
+    let tempCurrentEvents = [...events];
+
+    for (const item of parsedPreview) {
+      const conflicting = checkEventConflict(item, tempCurrentEvents);
+      if (conflicting.length > 0) {
+        queue.push({ newEvent: item, conflicting });
+      } else {
+        safeList.push(item);
+        // Treat as if added so we can check conflicts against subsequent items in import list
+        tempCurrentEvents.push(item);
+      }
+    }
+
+    if (queue.length > 0) {
+      setConflictQueue(queue);
+      setSafeEventsToImport(safeList);
+      setIsConflictModalOpen(true);
+      return;
+    }
+
     try {
       const promises = parsedPreview.map(event => db.addEvent({
         title: event.title,
@@ -217,6 +257,60 @@ export default function CalendarPage() {
       setSyllabusText('');
     } catch (err) {
       addNotification('Failed to import some events', 'error');
+    }
+  };
+
+  // Resolve conflict decisions
+  const handleResolveConflicts = async (resolutions: {
+    toAdd: Omit<CalendarEvent, 'id'>[];
+    toDelete: string[];
+  }) => {
+    setIsConflictModalOpen(false);
+    setConflictQueue([]);
+
+    try {
+      // 1. Delete rejected existing events
+      if (resolutions.toDelete.length > 0) {
+        await Promise.all(resolutions.toDelete.map(id => db.deleteEvent(id)));
+      }
+
+      // 2. Add approved new events (including the conflict-free safe events)
+      const eventsToCreate = [...safeEventsToImport, ...resolutions.toAdd];
+      const addedList: CalendarEvent[] = [];
+
+      if (eventsToCreate.length > 0) {
+        const created = await Promise.all(eventsToCreate.map(evt => db.addEvent(evt)));
+        addedList.push(...created);
+      }
+
+      // 3. Update state
+      setEvents(prev => {
+        let updated = prev.filter(e => !resolutions.toDelete.includes(e.id));
+        updated = [...updated, ...addedList];
+        return updated;
+      });
+
+      addNotification(
+        `Schedule updated! Added ${eventsToCreate.length} event(s)` + 
+        (resolutions.toDelete.length > 0 ? `, removed ${resolutions.toDelete.length} conflict(s).` : '.'),
+        'success'
+      );
+
+      // Clean up forms & previews
+      setNewEvent({
+        title: '',
+        type: 'class',
+        date: '',
+        startTime: '',
+        endTime: '',
+        description: '',
+        course: ''
+      });
+      setParsedPreview([]);
+      setSyllabusText('');
+      setSafeEventsToImport([]);
+    } catch (err) {
+      addNotification('Failed to apply conflict resolutions', 'error');
     }
   };
 
@@ -511,6 +605,17 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+      
+      <ConflictModal
+        isOpen={isConflictModalOpen}
+        conflicts={conflictQueue}
+        onResolve={handleResolveConflicts}
+        onCancel={() => {
+          setIsConflictModalOpen(false);
+          setConflictQueue([]);
+          setSafeEventsToImport([]);
+        }}
+      />
     </div>
   );
 }

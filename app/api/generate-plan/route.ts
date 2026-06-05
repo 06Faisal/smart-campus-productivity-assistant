@@ -62,7 +62,33 @@ Ensure the response is valid JSON and contains ONLY the JSON object. Do not incl
       contents: `Generate a personalized study plan for: ${course} - ${examTitle}`,
       config: {
         systemInstruction: systemPrompt,
-        responseMimeType: 'application/json'
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'OBJECT',
+          properties: {
+            markdown: {
+              type: 'STRING',
+              description: 'A detailed study plan in Markdown format, day-by-day or week-by-week. Explains topics, recall strategies, and motivational tips.'
+            },
+            events: {
+              type: 'ARRAY',
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  title: { type: 'STRING' },
+                  start_time: { type: 'STRING', description: 'ISO 8601 DateTime string' },
+                  end_time: { type: 'STRING', description: 'ISO 8601 DateTime string' },
+                  description: { type: 'STRING', description: 'Focus checklist for this study session' },
+                  type: { type: 'STRING', description: 'Always study_session' },
+                  course: { type: 'STRING' }
+                },
+                required: ['title', 'start_time', 'end_time', 'description', 'type', 'course']
+              },
+              description: 'Array of study session events scheduled in the calendar.'
+            }
+          },
+          required: ['markdown', 'events']
+        }
       }
     });
 
@@ -71,7 +97,15 @@ Ensure the response is valid JSON and contains ONLY the JSON object. Do not incl
       throw new Error('No content returned from Gemini.');
     }
 
-    const result = JSON.parse(responseText.trim());
+    let cleanText = responseText.trim();
+    if (cleanText.startsWith('```')) {
+      const match = cleanText.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+      if (match) {
+        cleanText = match[1].trim();
+      }
+    }
+
+    const result = JSON.parse(cleanText);
     return NextResponse.json(result);
 
   } catch (error: any) {

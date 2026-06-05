@@ -42,8 +42,25 @@ Return ONLY a valid JSON array of these event objects. Do not wrap in markdown b
       ],
       config: {
         systemInstruction: systemPrompt,
-        // Enforce JSON output format
-        responseMimeType: 'application/json'
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'ARRAY',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              title: { type: 'STRING', description: 'Concise, descriptive name of the event' },
+              start_time: { type: 'STRING', description: 'ISO 8601 DateTime string' },
+              end_time: { type: 'STRING', description: 'ISO 8601 DateTime string' },
+              description: { type: 'STRING', description: 'Details like location, chapters, weight, etc.' },
+              type: { 
+                type: 'STRING', 
+                description: 'One of: class, exam, assignment, study_session, or other' 
+              },
+              course: { type: 'STRING', description: 'Name of the course' }
+            },
+            required: ['title', 'start_time', 'end_time', 'description', 'type', 'course']
+          }
+        }
       }
     });
 
@@ -52,9 +69,15 @@ Return ONLY a valid JSON array of these event objects. Do not wrap in markdown b
       throw new Error('No content returned from Gemini.');
     }
 
-    // Parse the JSON array
-    const events = JSON.parse(responseText.trim());
+    let cleanText = responseText.trim();
+    if (cleanText.startsWith('```')) {
+      const match = cleanText.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+      if (match) {
+        cleanText = match[1].trim();
+      }
+    }
 
+    const events = JSON.parse(cleanText);
     return NextResponse.json({ events });
   } catch (error: any) {
     console.error('Error in syllabus parser API:', error);

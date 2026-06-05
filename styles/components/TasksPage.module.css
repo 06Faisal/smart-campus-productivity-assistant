@@ -1,0 +1,316 @@
+.container {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Pomodoro Timer Styling */
+.timerCard {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.timerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timerCircleWrapper {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.svgRing {
+  transform: rotate(-90deg);
+}
+
+.trackCircle {
+  fill: none;
+  stroke: var(--border-color);
+  stroke-width: 8;
+}
+
+.progressCircle {
+  fill: none;
+  stroke: var(--accent-primary);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+}
+
+.progressCircleBreak {
+  stroke: var(--accent-tertiary);
+  filter: drop-shadow(0 0 8px rgba(20, 184, 166, 0.5));
+}
+
+.timeDisplay {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.timerLabel {
+  position: absolute;
+  top: 145px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.timerModes {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.modeBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.modeBtnActive {
+  background: var(--bg-input-focus);
+  color: var(--text-primary);
+}
+
+.timerControls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.timerFocusTask {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: var(--accent-primary-muted);
+  border: 1px dashed rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  font-size: 12.5px;
+  width: 100%;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Eisenhower Matrix Styling */
+.matrixGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+  min-height: 520px;
+  margin-bottom: 24px;
+}
+
+.quadrant {
+  padding: 24px;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-left: 4px solid transparent;
+}
+
+.quad-urgent_important { border-left-color: var(--color-urgent-important); }
+.quad-not_urgent_important { border-left-color: var(--color-not-urgent-important); }
+.quad-urgent_not_important { border-left-color: var(--color-urgent-not-important); }
+.quad-not_urgent_not_important { border-left-color: var(--color-not-urgent-not-important); }
+
+.quadTitle {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quadCount {
+  font-size: 11px;
+  background: var(--bg-input-focus);
+  border: 1px solid var(--border-color);
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+}
+
+.taskList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 200px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  transition: var(--transition-smooth);
+}
+
+.taskItem:hover {
+  background: var(--bg-input-focus);
+  border-color: var(--border-color-hover);
+}
+
+.taskCheckbox {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-primary);
+  border-radius: 4px;
+  outline: none;
+}
+
+.taskDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+
+.taskTitleText {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: var(--transition-smooth);
+}
+
+.taskCompleted {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.taskMeta {
+  font-size: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.pomodoroIndicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-secondary);
+}
+
+.actionsGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.focusTaskBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: var(--transition-smooth);
+}
+
+.focusTaskBtn:hover {
+  color: var(--accent-secondary);
+  background: var(--accent-secondary-muted);
+}
+
+.focusTaskBtnActive {
+  color: var(--accent-secondary);
+  filter: drop-shadow(0 0 4px var(--accent-secondary));
+}
+
+.deleteBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: var(--transition-smooth);
+}
+
+.deleteBtn:hover {
+  color: var(--color-urgent-important);
+  background: var(--color-danger-muted);
+}
+
+.addCard {
+  padding: 24px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  text-align: center;
+  padding: 20px 0;
+  font-style: italic;
+}
+
+@media (max-width: 1024px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+  
+  .matrixGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}

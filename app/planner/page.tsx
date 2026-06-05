@@ -345,11 +345,11 @@ export default function PlannerPage() {
                   value={formData.preferredTime}
                   onChange={(e) => setFormData({...formData, preferredTime: e.target.value})}
                   className="form-input"
-                  style={{ background: 'rgba(255, 255, 255, 0.03)', color: 'white' }}
+                  style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                 >
-                  <option value="morning" style={{ background: '#0e1222' }}>Morning (9:00 AM - 12:00 PM)</option>
-                  <option value="afternoon" style={{ background: '#0e1222' }}>Afternoon (1:00 PM - 4:00 PM)</option>
-                  <option value="evening" style={{ background: '#0e1222' }}>Evening (6:00 PM - 9:00 PM)</option>
+                  <option value="morning" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-primary)' }}>Morning (9:00 AM - 12:00 PM)</option>
+                  <option value="afternoon" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-primary)' }}>Afternoon (1:00 PM - 4:00 PM)</option>
+                  <option value="evening" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-primary)' }}>Evening (6:00 PM - 9:00 PM)</option>
                 </select>
               </div>
 
@@ -359,12 +359,12 @@ export default function PlannerPage() {
                   value={formData.studyStyle}
                   onChange={(e) => setFormData({...formData, studyStyle: e.target.value})}
                   className="form-input"
-                  style={{ background: 'rgba(255, 255, 255, 0.03)', color: 'white' }}
+                  style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                 >
-                  <option value="pomodoro" style={{ background: '#0e1222' }}>Pomodoro Sprint (25m Focus / 5m Break)</option>
-                  <option value="active_recall" style={{ background: '#0e1222' }}>Active Recall & Flashcard Quizzing</option>
-                  <option value="reading" style={{ background: '#0e1222' }}>Visual Reading & Summarization</option>
-                  <option value="practice" style={{ background: '#0e1222' }}>Practical Exercises & Problem Solving</option>
+                  <option value="pomodoro" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-primary)' }}>Pomodoro Sprint (25m Focus / 5m Break)</option>
+                  <option value="active_recall" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-primary)' }}>Active Recall & Flashcard Quizzing</option>
+                  <option value="reading" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-primary)' }}>Visual Reading & Summarization</option>
+                  <option value="practice" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-primary)' }}>Practical Exercises & Problem Solving</option>
                 </select>
               </div>
             </div>

@@ -194,8 +194,9 @@ a {
 /* ─── LAYOUT SYSTEM ─── */
 .layout-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
+  overflow: hidden;
 }
 
 .main-content {
@@ -205,6 +206,7 @@ a {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  height: 100%;
 }
 
 /* ─── BUTTONS ─── */
@@ -321,9 +323,13 @@ a {
 @media (max-width: 768px) {
   .layout-container {
     flex-direction: column;
+    height: auto;
+    overflow: visible;
   }
 
   .main-content {
     padding: 16px 20px;
+    height: auto;
+    overflow-y: visible;
   }
 }

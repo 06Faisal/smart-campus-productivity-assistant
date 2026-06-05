@@ -33,7 +33,8 @@ Create a personalized study plan for a student preparing for an upcoming exam.
 Input Constraints:
 - Course: ${course}
 - Exam Title: ${examTitle}
-- Exam Date: ${new Date(examDate).toLocaleDateString()}
+- Exam Date: ${new Date(examDate).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+- Today's Date (Current Reference): ${new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
 - Difficulty Level (1 to 5): ${difficulty}/5
 - Study Time Budget: ${dailyHours} hours/day
 - Preferred Time of Day: ${preferredTime} (Morning: 9am-12pm, Afternoon: 1pm-4pm, Evening: 6pm-9pm)
@@ -44,8 +45,8 @@ Avoid conflicts with existing calendar events if possible:
 ${existingEventsSummary}
 
 Return a structured JSON object with the following two fields:
-1. "markdown": A detailed study plan in Markdown format, with headers and bullet points. Break it down day-by-day (or week-by-week if the exam is far away). Explain what topics to study, active recall strategies to use, and motivational tips.
-2. "events": A JSON array of calendar event objects representing scheduled study blocks. You should schedule study blocks starting from tomorrow up until the day before the exam.
+1. "markdown": A detailed study plan in Markdown format, with headers and bullet points. Break it down day-by-day starting from tomorrow (relative to Today's Date) up until the day before the exam. Explain what topics to study, active recall strategies to use, and motivational tips.
+2. "events": A JSON array of calendar event objects representing scheduled study blocks. You should schedule study blocks starting from tomorrow (relative to Today's Date) up until the day before the exam.
    Each event in this array must have:
    - "title": Text title (e.g., "Study: ${course} - Topics X & Y").
    - "start_time": ISO 8601 DateTime string (align with the student's preferred study time of day, e.g., if Evening is preferred, schedule around 6:00 PM / 18:00).

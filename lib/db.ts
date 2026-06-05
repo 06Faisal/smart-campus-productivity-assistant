@@ -72,6 +72,18 @@ export const db = {
   },
 
   async addEvent(event: Omit<CalendarEvent, 'id'>): Promise<CalendarEvent> {
+    // Prevent duplicate entries (exact matches for title, times, and course)
+    const existingEvents = await this.getEvents();
+    const duplicate = existingEvents.find(e => 
+      e.title === event.title &&
+      new Date(e.start_time).getTime() === new Date(event.start_time).getTime() &&
+      new Date(e.end_time).getTime() === new Date(event.end_time).getTime() &&
+      (e.course || '') === (event.course || '')
+    );
+    if (duplicate) {
+      return duplicate;
+    }
+
     const newEvent: CalendarEvent = { ...event, id: generateId() };
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.from('events').insert([newEvent]).select();

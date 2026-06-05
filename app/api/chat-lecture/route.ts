@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getGeminiClient, GEMINI_MODEL } from '@/lib/gemini';
+import { getGeminiClient, GEMINI_MODEL, generateContentWithRetry } from '@/lib/gemini';
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +30,7 @@ Provide helpful, clear, and structured explanations. Feel free to use markdown b
       parts: [{ text: msg.content }]
     }));
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry(ai, {
       model: GEMINI_MODEL,
       contents: formattedContents,
       config: {

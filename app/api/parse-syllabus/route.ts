@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getGeminiClient, GEMINI_MODEL } from '@/lib/gemini';
+import { getGeminiClient, GEMINI_MODEL, generateContentWithRetry } from '@/lib/gemini';
 
 export async function POST(request: Request) {
   try {
@@ -35,7 +35,7 @@ For each event, you must return:
 Return ONLY a valid JSON array of these event objects. Do not wrap in markdown blocks, do not include any explanatory text. Just the raw JSON array.
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry(ai, {
       model: GEMINI_MODEL,
       contents: [
         { role: 'user', parts: [{ text: `Syllabus Content:\n${text}` }] }

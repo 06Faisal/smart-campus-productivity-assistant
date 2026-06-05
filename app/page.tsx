@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { db, CalendarEvent, Task, Lecture } from '@/lib/db';
 import { auth, UserProfile } from '@/lib/auth';
 import { runDeadlineSweeper, DeadlineAlert } from '@/lib/sweeper';
-import { getGeminiClient, GEMINI_MODEL } from '@/lib/gemini';
+import { getGeminiClient, GEMINI_MODEL, generateContentWithRetry } from '@/lib/gemini';
 import { useApp } from '@/components/AppContext';
 import styles from '@/styles/components/Dashboard.module.css';
 import { 
@@ -100,7 +100,7 @@ export default function Dashboard() {
         
         Return ONLY the coaching message text. No extra headings or preamble.`;
 
-        const response = await client.models.generateContent({
+        const response = await generateContentWithRetry(client, {
           model: GEMINI_MODEL,
           contents: prompt,
         });
